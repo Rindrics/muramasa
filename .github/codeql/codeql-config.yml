@@ -1,0 +1,7 @@
+name: "CodeQL config for muramasa"
+
+paths:
+  - src
+
+paths-ignore:
+  - node_modules/
