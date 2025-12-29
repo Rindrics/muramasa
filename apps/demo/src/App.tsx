@@ -8,8 +8,14 @@ interface BlockWithData {
 	data: string[][];
 }
 
+interface SheetData {
+	name: string;
+	blocks: BlockWithData[];
+}
+
 function App() {
-	const [blocksWithData, setBlocksWithData] = useState<BlockWithData[]>([]);
+	const [sheets, setSheets] = useState<SheetData[]>([]);
+	const [activeSheet, setActiveSheet] = useState<number>(0);
 	const [fileName, setFileName] = useState<string>("");
 
 	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,23 +31,33 @@ function App() {
 
 		const arrayBuffer = await file.arrayBuffer();
 		const workbook = XLSX.read(arrayBuffer, { type: "array" });
-		const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-		const detectedBlocks = detectTableBlocks(sheet);
+		// Parse all sheets
+		const sheetsData: SheetData[] = workbook.SheetNames.map((sheetName) => {
+			const sheet = workbook.Sheets[sheetName];
+			const detectedBlocks = detectTableBlocks(sheet);
 
-		// Extract cell data for each block
-		const blocksData = detectedBlocks.map((block) => {
-			const structure = analyzeBlockStructure(block);
-			const data = extractBlockData(XLSX, sheet, block);
+			const blocks = detectedBlocks.map((block) => {
+				const structure = analyzeBlockStructure(block);
+				const data = extractBlockData(XLSX, sheet, block);
+				return {
+					block,
+					title: structure.titleRow?.labelValue,
+					data,
+				};
+			});
+
 			return {
-				block,
-				title: structure.titleRow?.labelValue,
-				data,
+				name: sheetName,
+				blocks,
 			};
 		});
 
-		setBlocksWithData(blocksData);
+		setSheets(sheetsData);
+		setActiveSheet(0);
 	};
+
+	const currentSheet = sheets[activeSheet];
 
 	return (
 		<div className="container">
@@ -64,40 +80,69 @@ function App() {
 					</label>
 				</section>
 
-				{blocksWithData.length > 0 && (
+				{sheets.length > 0 && (
 					<section className="results-section">
-						<h2>Detected {blocksWithData.length} blocks</h2>
-						<div className="blocks-list">
-							{blocksWithData.map(({ block, title, data }, index) => (
-								<div key={`block-${block.startRow}`} className="block-card">
-									<div className="block-header">
-										<span className="block-title">
-											{title || `Block ${index + 1}`}
-										</span>
-										<span className="block-range">
-											Rows {block.startRow} - {block.endRow}
-										</span>
-									</div>
-									<div className="table-wrapper">
-										<table className="data-table">
-											<tbody>
-												{(title ? data.slice(1) : data).map((row, rowIdx) => (
-													<tr key={`row-${block.startRow}-${rowIdx}`}>
-														{row.map((cell, colIdx) => (
-															<td
-																key={`cell-${block.startRow}-${rowIdx}-${colIdx}`}
-															>
-																{cell}
-															</td>
-														))}
-													</tr>
-												))}
-											</tbody>
-										</table>
-									</div>
+						{/* Sheet tabs */}
+						{sheets.length > 1 && (
+							<div className="sheet-tabs">
+								{sheets.map((sheet, index) => (
+									<button
+										type="button"
+										key={sheet.name}
+										className={`sheet-tab ${index === activeSheet ? "active" : ""}`}
+										onClick={() => setActiveSheet(index)}
+									>
+										{sheet.name}
+									</button>
+								))}
+							</div>
+						)}
+
+						{/* Current sheet content */}
+						{currentSheet && (
+							<>
+								<h2>
+									{sheets.length > 1 && `${currentSheet.name}: `}
+									Detected {currentSheet.blocks.length} blocks
+								</h2>
+								<div className="blocks-list">
+									{currentSheet.blocks.map(({ block, title, data }, index) => (
+										<div key={`block-${block.startRow}`} className="block-card">
+											<div className="block-header">
+												<span className="block-title">
+													{title || `Block ${index + 1}`}
+												</span>
+												<span className="block-range">
+													Rows {block.startRow} - {block.endRow}
+												</span>
+											</div>
+											<div className="table-wrapper">
+												<table className="data-table">
+													<tbody>
+														{(title ? data.slice(1) : data).map(
+															(row, rowIdx) => (
+																<tr key={`row-${block.startRow}-${rowIdx}`}>
+																	{row.map((cell, colIdx) => (
+																		<td
+																			key={`cell-${block.startRow}-${rowIdx}-${colIdx}`}
+																		>
+																			{cell}
+																		</td>
+																	))}
+																</tr>
+															),
+														)}
+													</tbody>
+												</table>
+											</div>
+										</div>
+									))}
+									{currentSheet.blocks.length === 0 && (
+										<p className="no-blocks">No blocks detected in this sheet</p>
+									)}
 								</div>
-							))}
-						</div>
+							</>
+						)}
 					</section>
 				)}
 			</main>
