@@ -228,12 +228,18 @@ export function analyzeBlockStructure(
  * @param data - File data (ArrayBuffer, string, etc.)
  * @param type - Data type (default: "array" for ArrayBuffer)
  * @returns First worksheet from the workbook
+ * @throws Error if workbook contains no sheets
  */
 export function loadSheet(
 	data: ArrayBuffer | string | Uint8Array,
 	type: "array" | "string" | "buffer" = "array",
 ): XLSX.WorkSheet {
 	const workbook = XLSX.read(data, { type });
+
+	if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+		throw new Error("Workbook contains no sheets");
+	}
+
 	return workbook.Sheets[workbook.SheetNames[0]];
 }
 
