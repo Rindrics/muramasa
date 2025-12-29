@@ -5,7 +5,7 @@
 	"type": "module",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Rindrics/muramasa"
+		"url": "https://github.com/Rindrics/tblparse"
 	},
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
