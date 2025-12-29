@@ -1,4 +1,4 @@
-name: "CodeQL config for muramasa"
+name: "CodeQL config for tblparse"
 
 paths:
   - src
