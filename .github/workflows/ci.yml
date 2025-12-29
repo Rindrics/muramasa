@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
+      - 'packages/**'
+      - 'apps/**'
       - 'package.json'
       - 'tsconfig.json'
       - 'biome.json'
@@ -15,7 +16,8 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
+      - 'packages/**'
+      - 'apps/**'
       - 'package.json'
       - 'tsconfig.json'
       - 'biome.json'
@@ -40,8 +42,37 @@ jobs:
       - name: Biome check
         run: bun run check
 
-      - name: TypeScript check
-        run: bun run build
+  build-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build core
+        run: bun run --cwd packages/core build
+
+  build-demo:
+    runs-on: ubuntu-latest
+    needs: build-core
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build core (dependency)
+        run: bun run --cwd packages/core build
+
+      - name: Build demo
+        run: bun run --cwd apps/demo build
 
   test:
     runs-on: ubuntu-latest
@@ -54,5 +85,5 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Test
-        run: bun test
+      - name: Test core
+        run: bun run --cwd packages/core test

@@ -1,9 +1,24 @@
 version: 2
 updates:
+  # Root package.json (workspace root)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+
+  # Core package
+  - package-ecosystem: "npm"
+    directory: "/packages/core"
+    schedule:
+      interval: "weekly"
+
+  # Demo app
+  - package-ecosystem: "npm"
+    directory: "/apps/demo"
+    schedule:
+      interval: "weekly"
+
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

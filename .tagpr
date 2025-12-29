@@ -2,6 +2,7 @@
 # https://github.com/Songmu/tagpr
 
 [tagpr]
-versionFile = "package.json"
+
+versionFile = "packages/core/package.json"
 	vPrefix = true
 	releaseBranch = main
