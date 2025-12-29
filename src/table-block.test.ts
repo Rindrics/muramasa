@@ -4,8 +4,8 @@
  * サンプル CSV を使用してブロック検出ロジックをテスト
  */
 
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
 import {
@@ -82,8 +82,8 @@ describe("table-block", () => {
 			const titleRow = detectTitleRow(blocks[0]);
 
 			expect(titleRow).toBeDefined();
-			expect(titleRow!.labelValue).toBe("Sales Data (FY2024)");
-			expect(titleRow!.columnCount).toBe(1);
+			expect(titleRow?.labelValue).toBe("Sales Data (FY2024)");
+			expect(titleRow?.columnCount).toBe(1);
 		});
 
 		it("should return undefined when first row has max columns", () => {
@@ -105,7 +105,7 @@ describe("table-block", () => {
 			const titleRow = detectTitleRow(block);
 
 			expect(titleRow).toBeDefined();
-			expect(titleRow!.labelValue).toBe("Simple Table (No Header)");
+			expect(titleRow?.labelValue).toBe("Simple Table (No Header)");
 		});
 	});
 
@@ -115,7 +115,7 @@ describe("table-block", () => {
 			const headerRow = detectHeaderRow(blocks[0]);
 
 			expect(headerRow).toBeDefined();
-			expect(headerRow!.labelValue).toBe("Month");
+			expect(headerRow?.labelValue).toBe("Month");
 		});
 
 		it("should detect header with regex pattern", () => {
@@ -125,7 +125,7 @@ describe("table-block", () => {
 			});
 
 			expect(headerRow).toBeDefined();
-			expect(headerRow!.labelValue).toBe("Item");
+			expect(headerRow?.labelValue).toBe("Item");
 		});
 
 		it("should return undefined when noHeader is true", () => {
@@ -142,10 +142,10 @@ describe("table-block", () => {
 			const structure = analyzeBlockStructure(blocks[0]);
 
 			expect(structure.titleRow).toBeDefined();
-			expect(structure.titleRow!.labelValue).toBe("Sales Data (FY2024)");
+			expect(structure.titleRow?.labelValue).toBe("Sales Data (FY2024)");
 
 			expect(structure.headerRow).toBeDefined();
-			expect(structure.headerRow!.labelValue).toBe("Month");
+			expect(structure.headerRow?.labelValue).toBe("Month");
 
 			// Data rows: Jan, Feb, Mar, Total = 4 rows
 			expect(structure.dataRows.length).toBe(4);
@@ -158,7 +158,7 @@ describe("table-block", () => {
 			const structure = analyzeBlockStructure(blocks[2], { noHeader: true });
 
 			expect(structure.titleRow).toBeDefined();
-			expect(structure.titleRow!.labelValue).toBe("Simple Table (No Header)");
+			expect(structure.titleRow?.labelValue).toBe("Simple Table (No Header)");
 
 			expect(structure.headerRow).toBeUndefined();
 
@@ -172,8 +172,8 @@ describe("table-block", () => {
 				headerPattern: /^ID$/,
 			});
 
-			expect(structure.titleRow!.labelValue).toBe("Notes Data");
-			expect(structure.headerRow!.labelValue).toBe("ID");
+			expect(structure.titleRow?.labelValue).toBe("Notes Data");
+			expect(structure.headerRow?.labelValue).toBe("ID");
 			expect(structure.dataRows.length).toBe(3);
 		});
 
@@ -186,7 +186,7 @@ describe("table-block", () => {
 
 			// Header is the first row
 			expect(structure.headerRow).toBeDefined();
-			expect(structure.headerRow!.labelValue).toBe("Name");
+			expect(structure.headerRow?.labelValue).toBe("Name");
 
 			// Data rows: Alice, Bob, Charlie = 3 rows
 			expect(structure.dataRows.length).toBe(3);
