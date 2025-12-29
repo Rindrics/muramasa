@@ -5,12 +5,7 @@
 		"moduleResolution": "bundler",
 		"strict": true,
 		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"declaration": true,
-		"outDir": "./dist",
-		"rootDir": "./src",
-		"types": ["bun-types"]
+		"skipLibCheck": true
 	},
-	"include": ["src/**/*"],
-	"exclude": ["node_modules", "dist"]
+	"references": [{ "path": "./packages/core" }, { "path": "./apps/demo" }]
 }
