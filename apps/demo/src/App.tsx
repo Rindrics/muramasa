@@ -1,8 +1,15 @@
 import type { TableBlock } from "@rindrics/tblparse";
 import { useState } from "react";
+import type { WorkSheet } from "xlsx";
+
+interface BlockWithData {
+	block: TableBlock;
+	title: string | undefined;
+	data: string[][];
+}
 
 function App() {
-	const [blocks, setBlocks] = useState<TableBlock[]>([]);
+	const [blocksWithData, setBlocksWithData] = useState<BlockWithData[]>([]);
 	const [fileName, setFileName] = useState<string>("");
 
 	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -11,23 +18,36 @@ function App() {
 
 		setFileName(file.name);
 
-		// Dynamic import to avoid SSR issues with xlsx
 		const XLSX = await import("xlsx");
-		const { detectTableBlocks } = await import("@rindrics/tblparse");
+		const { detectTableBlocks, analyzeBlockStructure } = await import(
+			"@rindrics/tblparse"
+		);
 
 		const arrayBuffer = await file.arrayBuffer();
 		const workbook = XLSX.read(arrayBuffer, { type: "array" });
 		const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
 		const detectedBlocks = detectTableBlocks(sheet);
-		setBlocks(detectedBlocks);
+
+		// Extract cell data for each block
+		const blocksData = detectedBlocks.map((block) => {
+			const structure = analyzeBlockStructure(block);
+			const data = extractBlockData(XLSX, sheet, block);
+			return {
+				block,
+				title: structure.titleRow?.labelValue,
+				data,
+			};
+		});
+
+		setBlocksWithData(blocksData);
 	};
 
 	return (
 		<div className="container">
 			<header className="header">
 				<h1>tblparse Demo</h1>
-				<p className="subtitle">Excel/CSV ファイルからテーブルブロックを検出</p>
+				<p className="subtitle">Detect table blocks from Excel/CSV files</p>
 			</header>
 
 			<main className="main">
@@ -39,48 +59,41 @@ function App() {
 							onChange={handleFileChange}
 							className="file-input"
 						/>
-						<span className="file-input-button">ファイルを選択</span>
+						<span className="file-input-button">Select file</span>
 						{fileName && <span className="file-name">{fileName}</span>}
 					</label>
 				</section>
 
-				{blocks.length > 0 && (
+				{blocksWithData.length > 0 && (
 					<section className="results-section">
-						<h2>検出されたブロック: {blocks.length}件</h2>
-						<div className="blocks-grid">
-							{blocks.map((block, index) => (
+						<h2>Detected {blocksWithData.length} blocks</h2>
+						<div className="blocks-list">
+							{blocksWithData.map(({ block, title, data }, index) => (
 								<div key={`block-${block.startRow}`} className="block-card">
 									<div className="block-header">
-										<span className="block-number">Block {index + 1}</span>
+										<span className="block-title">
+											{title || `Block ${index + 1}`}
+										</span>
 										<span className="block-range">
-											行 {block.startRow} - {block.endRow}
+											Rows {block.startRow} - {block.endRow}
 										</span>
 									</div>
-									<div className="block-stats">
-										<div className="stat">
-											<span className="stat-label">行数</span>
-											<span className="stat-value">{block.rows.length}</span>
-										</div>
-										<div className="stat">
-											<span className="stat-label">最大列数</span>
-											<span className="stat-value">{block.maxColumnCount}</span>
-										</div>
-									</div>
-									<div className="block-rows">
-										{block.rows.slice(0, 5).map((row) => (
-											<div key={`row-${row.row}`} className="row-item">
-												<span className="row-number">#{row.row}</span>
-												<span className="row-label">
-													{row.labelValue || "(empty)"}
-												</span>
-												<span className="row-cols">{row.columnCount}列</span>
-											</div>
-										))}
-										{block.rows.length > 5 && (
-											<div className="row-more">
-												... 他 {block.rows.length - 5} 行
-											</div>
-										)}
+									<div className="table-wrapper">
+										<table className="data-table">
+											<tbody>
+												{(title ? data.slice(1) : data).map((row, rowIdx) => (
+													<tr key={`row-${block.startRow}-${rowIdx}`}>
+														{row.map((cell, colIdx) => (
+															<td
+																key={`cell-${block.startRow}-${rowIdx}-${colIdx}`}
+															>
+																{cell}
+															</td>
+														))}
+													</tr>
+												))}
+											</tbody>
+										</table>
 									</div>
 								</div>
 							))}
@@ -93,7 +106,7 @@ function App() {
 				<p>
 					Powered by{" "}
 					<a
-						href="https://github.com/rindrics/muramasa"
+						href="https://www.npmjs.com/package/@rindrics/tblparse"
 						target="_blank"
 						rel="noopener noreferrer"
 					>
@@ -103,6 +116,26 @@ function App() {
 			</footer>
 		</div>
 	);
+}
+
+function extractBlockData(
+	XLSX: typeof import("xlsx"),
+	sheet: WorkSheet,
+	block: TableBlock,
+): string[][] {
+	const data: string[][] = [];
+
+	for (let row = block.startRow; row <= block.endRow; row++) {
+		const rowData: string[] = [];
+		for (let col = 0; col < block.maxColumnCount; col++) {
+			const cellAddress = XLSX.utils.encode_cell({ r: row - 1, c: col });
+			const cell = sheet[cellAddress];
+			rowData.push(cell?.v !== undefined ? String(cell.v) : "");
+		}
+		data.push(rowData);
+	}
+
+	return data;
 }
 
 export default App;
