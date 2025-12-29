@@ -1,5 +1,5 @@
-import { useState } from "react";
 import type { TableBlock } from "@rindrics/tblparse";
+import { useState } from "react";
 
 function App() {
 	const [blocks, setBlocks] = useState<TableBlock[]>([]);
