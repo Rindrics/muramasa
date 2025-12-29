@@ -138,7 +138,9 @@ function App() {
 										</div>
 									))}
 									{currentSheet.blocks.length === 0 && (
-										<p className="no-blocks">No blocks detected in this sheet</p>
+										<p className="no-blocks">
+											No blocks detected in this sheet
+										</p>
 									)}
 								</div>
 							</>
