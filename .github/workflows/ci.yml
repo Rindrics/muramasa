@@ -11,6 +11,7 @@ on:
       - 'tsconfig.json'
       - 'biome.json'
       - 'bun.lock'
+      - 'apps/demo/bun.lock'
       - '.github/workflows/ci.yml'
   push:
     branches:
@@ -22,6 +23,7 @@ on:
       - 'tsconfig.json'
       - 'biome.json'
       - 'bun.lock'
+      - 'apps/demo/bun.lock'
       - '.github/workflows/ci.yml'
 
 permissions:
@@ -66,13 +68,13 @@ jobs:
         with:
           bun-version: latest
 
-      - run: bun install --frozen-lockfile
-
-      - name: Build core (dependency)
-        run: bun run --cwd packages/core build
+      - name: Install demo dependencies
+        run: bun install --frozen-lockfile
+        working-directory: apps/demo
 
       - name: Build demo
-        run: bun run --cwd apps/demo build
+        run: bun run build
+        working-directory: apps/demo
 
   test:
     runs-on: ubuntu-latest
