@@ -37,12 +37,12 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@codeql-bundle-v2.23.8
+        uses: github/codeql-action/init@codeql-bundle-v2.23.9
         with:
           languages: javascript-typescript
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@codeql-bundle-v2.23.8
+        uses: github/codeql-action/analyze@codeql-bundle-v2.23.9
         with:
           category: '/language:javascript-typescript'
